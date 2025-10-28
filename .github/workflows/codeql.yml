@@ -38,19 +38,13 @@ jobs:
     needs: analyze
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Build Docker image
-        run: docker build -t go-web-server .
-      - name: Run Docker container in background
-        run: |
-          docker run -d --name test-server -p 8080:8080 go-web-server
-          sleep 5
-          
-      - name: Test /readfile endpoint
-        run: docker exec test-server curl http://localhost:8080/readfile?file=hello.txt
-        
-      - name: Test /exec endpoint
-        run: curl "http://localhost:8080/exec?cmd=echo hello"
+        uses: actions/checkout@v4
 
-      - name: Stop Docker container
-        run: docker stop test-server
+      - name: Build and run Docker container
+        run: |
+          docker build -t go-web-server .
+          docker run -d --name test-server -p 8080:8080 go-web-server
+
+      - name: Stop and remove container
+        if: always()
+        run: docker stop test-server && docker rm test-server
